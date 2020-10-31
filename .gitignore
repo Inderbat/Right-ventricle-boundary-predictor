@@ -1,0 +1,9 @@
+# The heavy dataset files and the models are not to be tracked
+.ipynb_checkpoints/
+models/
+Test1Set/
+Test2Set/
+TrainingSet/
+train_dir/
+train_dir_trunc/
+assignment_1.ipynb
