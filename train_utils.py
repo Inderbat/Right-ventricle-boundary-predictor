@@ -378,3 +378,156 @@ def save_models(criteria):
             model_state, optimizer_state = torch.load(os.path.join(best_checkpoint_dir, "checkpoint"))
             u_net.load_state_dict(model_state)
             torch.save(u_net.state_dict(), 'unet_baseline_{}_{}_{}_{}.pt'.format(loss_type, optimizer_type, learning_rate_scheduler, sp_string))
+
+def model_evaluate(data_loader_test):
+    supervision_string = ['2','4','6','8','10']
+    Loss_Type = ['FL','CEDL','CEDIL','SL','VCE']
+    Learning_Rate_Scheduler = ['CARM', 'SLR', 'RLR', 'RLROP']
+    Optimizer_Type = ['SGD', 'Adam', 'Adad', 'Adag', 'RMSp']
+      
+    #graphing on loss type
+    result_data_loss_type = []
+    result_data_optimizer_type = []
+    result_data_learning_rate_scheduler = []
+    for loss_type in Loss_Type:
+        result_data = []
+        optimizer_type = 'Adam'
+        learning_rate_scheduler = 'CARM'
+        for sp_string in supervision_string:
+            u_net = Unet().to(device)  
+            model_state = torch.load('unet_baseline_{}_{}_{}_{}.pt'.format(loss_type, optimizer_type, learning_rate_scheduler, sp_string))
+            u_net.load_state_dict(model_state)
+            u_net.eval()
+            no_of_batches = 0
+            total_dice_coefficient = 0
+            total_loss = 0
+            actual_total_dice_coefficient = 0
+            total_size = 0
+            with torch.no_grad():
+                for batch_index, data_batch in enumerate(data_loader_test):
+
+                    # casting the variables to device
+                    image_data, mask_data = data_batch
+                    image_data = image_data.to(device, dtype=torch.float)
+                    mask_data = (mask_data > 0).clone().to(device, dtype=torch.float)
+                    model_output = u_net(image_data)
+
+                    # computation of dice coefficient for the batch
+                    no_of_batches += 1
+                  
+                    total_dice_coefficient += torch.mean(compute_dice_coefficient((model_output[:, 1, :, :] > 0.5).to(dtype=torch.float), mask_data)).detach().item()
+                    trial_total_dice_coefficient = compute_dice_coefficient((model_output[:, 1, :, :] > 0.5).to(dtype=torch.float), mask_data)
+                    trial_size = trial_total_dice_coefficient.numel()
+                    actual_total_dice_coefficient += torch.sum(trial_total_dice_coefficient).to(dtype=torch.float).item()
+                    total_size += trial_size
+
+                result_data.append(actual_total_dice_coefficient/total_size) 
+                print('Average Dice Coefficient:', total_dice_coefficient / no_of_batches)
+                print('Corrected Average Dice Coefficient:', actual_total_dice_coefficient / total_size)
+        result_data_loss_type.append(result_data)
+
+    for optimizer_type in Optimizer_Type:
+        result_data = []
+        loss_type = 'SL'
+        learning_rate_scheduler = 'CARM'
+        for sp_string in supervision_string:
+            u_net = Unet().to(device)  
+            model_state = torch.load('unet_baseline_{}_{}_{}_{}.pt'.format(loss_type, optimizer_type, learning_rate_scheduler, sp_string))
+            u_net.load_state_dict(model_state)
+            u_net.eval()
+            no_of_batches = 0
+            total_dice_coefficient = 0
+            total_loss = 0
+            actual_total_dice_coefficient = 0
+            total_size = 0
+            with torch.no_grad():
+                for batch_index, data_batch in enumerate(data_loader_test):
+
+                    # casting the variables to device
+                    image_data, mask_data = data_batch
+                    image_data = image_data.to(device, dtype=torch.float)
+                    mask_data = (mask_data > 0).clone().to(device, dtype=torch.float)
+                    model_output = u_net(image_data)
+
+                    # computation of dice coefficient for the batch
+                    no_of_batches += 1
+                    total_dice_coefficient += torch.mean(compute_dice_coefficient((model_output[:, 1, :, :] > 0.5).to(dtype=torch.float), mask_data)).detach().item()
+                    trial_total_dice_coefficient = compute_dice_coefficient((model_output[:, 1, :, :] > 0.5).to(dtype=torch.float), mask_data)
+                    trial_size = trial_total_dice_coefficient.numel()
+                    actual_total_dice_coefficient += torch.sum(trial_total_dice_coefficient).to(dtype=torch.float).item()
+                    total_size += trial_size
+
+                result_data.append(actual_total_dice_coefficient/total_size) 
+                print('Average Dice Coefficient:', total_dice_coefficient / no_of_batches)
+                print('Corrected Average Dice Coefficient:', actual_total_dice_coefficient / total_size)
+        result_data_optimizer_type.append(result_data)
+
+    for learning_rate_scheduler in Learning_Rate_Scheduler:
+        result_data = []
+        loss_type = 'SL'
+        optimizer_type = 'Adam'
+        for sp_string in supervision_string:
+            u_net = Unet().to(device)  
+            model_state = torch.load('unet_baseline_{}_{}_{}_{}.pt'.format(loss_type, optimizer_type, learning_rate_scheduler, sp_string))
+            u_net.load_state_dict(model_state)
+            u_net.eval()
+            no_of_batches = 0
+            total_dice_coefficient = 0
+            total_loss = 0
+            actual_total_dice_coefficient = 0
+            total_size = 0
+            with torch.no_grad():
+                for batch_index, data_batch in enumerate(data_loader_test):
+
+                    # casting the variables to device
+                    image_data, mask_data = data_batch
+                    image_data = image_data.to(device, dtype=torch.float)
+                    mask_data = (mask_data > 0).clone().to(device, dtype=torch.float)
+                    model_output = u_net(image_data)
+
+                    # computation of dice coefficient for the batch
+                    no_of_batches += 1
+                    total_dice_coefficient += torch.mean(compute_dice_coefficient((model_output[:, 1, :, :] > 0.5).to(dtype=torch.float), mask_data)).detach().item()
+                    trial_total_dice_coefficient = compute_dice_coefficient((model_output[:, 1, :, :] > 0.5).to(dtype=torch.float), mask_data)
+                    trial_size = trial_total_dice_coefficient.numel()
+                    actual_total_dice_coefficient += torch.sum(trial_total_dice_coefficient).to(dtype=torch.float).item()
+                    total_size += trial_size
+
+                result_data.append(actual_total_dice_coefficient/total_size) 
+                print('Average Dice Coefficient:', total_dice_coefficient / no_of_batches)
+                print('Corrected Average Dice Coefficient:', actual_total_dice_coefficient / total_size)
+        result_data_learning_rate_scheduler.append(result_data)
+
+    print(data_loss_type,data_optimizer_type, data_learning_rate_scheduler )
+    supervision_level = ['0.2','0.4','0.6','0.8','1.0']
+    Loss_Type = ['FL','CEDL','CEDIL','SL','VCE']
+    Learning_Rate_Scheduler = ['CARM', 'SLR', 'RLR', 'RLROP']
+    Optimizer_Type = ['SGD', 'Adam', 'Adad', 'Adag', 'RMSp']
+    
+    plt.figure()
+    for i in range(len(data_loss_type)):
+        plt.plot(supervision_level,data_loss_type[i],label = Loss_Type[i])
+        plt.title('Loss Type')
+        plt.xlabel('Supervision Level')
+        plt.ylabel('Dice Coefficient')
+        plt.legend(loc="upper left")
+    plt.show()
+    
+    plt.figure()
+    for i in range(len(data_optimizer_type)):
+        plt.plot(supervision_level,data_optimizer_type[i], label = Optimizer_Type[i])
+        plt.title('Optimizer Type')
+        plt.xlabel('Supervision Level')
+        plt.ylabel('Dice Coefficient')
+        plt.legend(loc="upper left")
+    plt.show()
+    
+    plt.figure()
+    for i in range(len(data_learning_rate_scheduler)):
+        plt.plot(supervision_level,data_learning_rate_scheduler[i], label = Learning_Rate_Scheduler[i])
+        plt.title('Learning Rate Scheduler')
+        plt.xlabel('Supervision Level')
+        plt.ylabel('Dice Coefficient')
+        plt.legend(loc="upper left")
+    plt.show()
+		
